@@ -289,7 +289,7 @@ fn walk(path: &Path, walk_data: &WalkData) -> Option<Node> {
                                         .to_string_lossy()
                                         .into_owned()
                                         .into_boxed_str();
-                                    return Some(Node {
+                                    Some(Node {
                                         children: vec![],
                                         name,
                                         metadata: walk_data
@@ -299,30 +299,21 @@ fn walk(path: &Path, walk_data: &WalkData) -> Option<Node> {
                                                 // doesn't traverse symlink
                                                 entry.metadata().ok().map(NodeMetadata::from)
                                             }),
-                                    });
+                                    })
                                 }
+                            } else {
+                                None
                             }
                         }
-                        Err(failed) => {
-                            if handle_error_and_retry(failed) {
-                                return walk(path, walk_data);
-                            }
-                        }
+                        Err(_) => None,
                     }
-                    None
                 })
                 .collect(),
-            Err(failed) => {
-                if handle_error_and_retry(&failed) {
-                    return walk(path, walk_data);
-                } else {
-                    vec![]
-                }
-            }
+            Err(_) => Vec::new(),
         }
     } else {
         walk_data.num_files.fetch_add(1, Ordering::Relaxed);
-        vec![]
+        Vec::new()
     };
     if walk_data
         .cancel

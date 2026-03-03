@@ -22,12 +22,7 @@ use parking_lot::Mutex;
 use search_cache::{SearchOptions, SearchOutcome, SearchResultNode, SlabIndex, SlabNodeMetadata};
 use search_cancel::CancellationToken;
 use serde::{Deserialize, Serialize};
-use std::{
-    cell::LazyCell,
-    fs::OpenOptions,
-    io::Write,
-    process::Command,
-};
+use std::{cell::LazyCell, fs::OpenOptions, io::Write, process::Command};
 use tauri::{ActivationPolicy, AppHandle, State};
 use tracing::{error, info, warn};
 
@@ -187,10 +182,10 @@ fn normalize_path_input(raw: &str) -> Option<String> {
 /// including empty lines and comments. A leading `~` is expanded so
 /// existing home-relative ignore entries keep matching.
 fn normalize_ignore_path_input(raw: &str) -> String {
-    if raw == "~" || raw.starts_with("~/") {
-        if let Some(expanded) = expand_path_input(raw) {
-            return expanded;
-        }
+    if (raw == "~" || raw.starts_with("~/"))
+        && let Some(expanded) = expand_path_input(raw)
+    {
+        return expanded;
     }
 
     raw.to_string()
@@ -495,9 +490,9 @@ pub async fn write_listed_files_tsv(path: String, content: String) -> Result<(),
         .truncate(true)
         .write(true)
         .open(&path)
-        .map_err(|e| format!("Failed to open TSV file for writing {}: {e}", path))?;
+        .map_err(|e| format!("Failed to open TSV file for writing {path}: {e}"))?;
     file.write_all(content.as_bytes())
-        .map_err(|e| format!("Failed to write TSV file to {}: {e}", path))?;
+        .map_err(|e| format!("Failed to write TSV file to {path}: {e}"))?;
     info!("Saved listed-files TSV to {}", path);
     Ok(())
 }
@@ -508,9 +503,9 @@ pub async fn append_listed_files_tsv_chunk(path: String, content: String) -> Res
         .create(true)
         .append(true)
         .open(&path)
-        .map_err(|e| format!("Failed to open TSV file for appending {}: {e}", path))?;
+        .map_err(|e| format!("Failed to open TSV file for appending {path}: {e}"))?;
     file.write_all(content.as_bytes())
-        .map_err(|e| format!("Failed appending TSV chunk to {}: {e}", path))?;
+        .map_err(|e| format!("Failed appending TSV chunk to {path}: {e}"))?;
     Ok(())
 }
 
@@ -519,7 +514,7 @@ pub async fn remove_listed_files_tsv(path: String) -> Result<(), String> {
     match std::fs::remove_file(&path) {
         Ok(()) => Ok(()),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(err) => Err(format!("Failed to remove TSV file {}: {err}", path)),
+        Err(err) => Err(format!("Failed to remove TSV file {path}: {err}")),
     }
 }
 

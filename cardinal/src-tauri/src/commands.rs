@@ -191,6 +191,31 @@ fn normalize_ignore_path_input(raw: &str) -> String {
     raw.to_string()
 }
 
+fn strip_multiline_ignore_comments(ignore_paths: Vec<String>) -> Vec<String> {
+    let mut normalized = Vec::with_capacity(ignore_paths.len());
+    let mut in_block_comment = false;
+
+    for path in ignore_paths {
+        let trimmed = path.trim();
+
+        if in_block_comment {
+            if trimmed == "*/" {
+                in_block_comment = false;
+            }
+            continue;
+        }
+
+        if trimmed == "/*" {
+            in_block_comment = true;
+            continue;
+        }
+
+        normalized.push(path);
+    }
+
+    normalized
+}
+
 /// Re-anchor legacy absolute ignore entries beneath the watch root so they keep
 /// matching after ignore evaluation switched to watch-root-relative gitignore semantics.
 fn rewrite_ignore_path_for_watch_root(raw: &str, watch_root: &str) -> String {
@@ -230,7 +255,7 @@ pub(crate) fn normalize_watch_config(
 ) -> Option<(String, Vec<String>)> {
     let watch_root = normalize_path_input(watch_root)
         .or_else(|| fallback_watch_root.and_then(normalize_path_input))?;
-    let mut ignore_paths = ignore_paths
+    let mut ignore_paths = strip_multiline_ignore_comments(ignore_paths)
         .into_iter()
         .map(|path| normalize_ignore_path_input(&path))
         .collect::<Vec<_>>();
@@ -741,6 +766,33 @@ mod tests {
     }
 
     #[test]
+    fn strip_multiline_ignore_comments_skips_wrapped_lines_and_markers() {
+        assert_eq!(
+            strip_multiline_ignore_comments(vec![
+                "/tmp/keep".to_string(),
+                "/*".to_string(),
+                "/tmp/commented".to_string(),
+                "# still commented".to_string(),
+                "*/".to_string(),
+                "/tmp/after".to_string(),
+            ]),
+            vec!["/tmp/keep".to_string(), "/tmp/after".to_string()]
+        );
+    }
+
+    #[test]
+    fn strip_multiline_ignore_comments_comments_until_end_when_unclosed() {
+        assert_eq!(
+            strip_multiline_ignore_comments(vec![
+                "/tmp/keep".to_string(),
+                " /* ".to_string(),
+                "/tmp/commented".to_string(),
+            ]),
+            vec!["/tmp/keep".to_string()]
+        );
+    }
+
+    #[test]
     fn normalize_watch_config_keeps_globs_and_adds_default_ignore_path() {
         let Some((watch_root, ignore_paths)) = normalize_watch_config(
             "/",
@@ -761,6 +813,32 @@ mod tests {
         assert!(ignore_paths.contains(&"relative/path".to_string()));
         assert!(ignore_paths.contains(&"/tmp/cache".to_string()));
         assert!(ignore_paths.contains(&DEFAULT_SYSTEM_IGNORE_PATH.to_string()));
+    }
+
+    #[test]
+    fn normalize_watch_config_drops_multiline_commented_ignore_entries() {
+        let Some((watch_root, ignore_paths)) = normalize_watch_config(
+            "/",
+            vec![
+                "/tmp/keep".to_string(),
+                "/*".to_string(),
+                "/tmp/commented".to_string(),
+                "/tmp/also-commented".to_string(),
+                "*/".to_string(),
+                "/tmp/after".to_string(),
+            ],
+            None,
+        ) else {
+            panic!("watch config should be valid");
+        };
+
+        assert_eq!(watch_root, "/");
+        assert!(ignore_paths.contains(&"/tmp/keep".to_string()));
+        assert!(ignore_paths.contains(&"/tmp/after".to_string()));
+        assert!(!ignore_paths.contains(&"/*".to_string()));
+        assert!(!ignore_paths.contains(&"*/".to_string()));
+        assert!(!ignore_paths.contains(&"/tmp/commented".to_string()));
+        assert!(!ignore_paths.contains(&"/tmp/also-commented".to_string()));
     }
 
     #[test]

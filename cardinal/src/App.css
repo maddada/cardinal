@@ -1671,11 +1671,29 @@ button:active:not(:disabled) {
 
 .preferences-help-text {
   margin-top: 4px;
-  max-width: 220px;
+  width: 100%;
   color: var(--color-text-secondary);
   font-size: 0.8rem;
   line-height: 1.35;
   white-space: normal;
+}
+
+.preferences-help-panel {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-elevated-border, var(--color-border));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.preferences-help-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.preferences-help-list .preferences-help-text {
+  margin-top: 6px;
 }
 
 .preferences-row__details {
@@ -1690,6 +1708,10 @@ button:active:not(:disabled) {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.preferences-row__details--inline .preferences-label {
+  margin: 0;
 }
 
 .preferences-control {
@@ -1766,6 +1788,35 @@ button:active:not(:disabled) {
 }
 
 .preferences-ignore-reset:focus-visible {
+  outline: 2px solid rgba(var(--color-accent-rgb), 0.35);
+  outline-offset: 2px;
+}
+
+.preferences-ignore-info {
+  border: 1px solid var(--color-elevated-border, var(--color-border));
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-radius: 999px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.preferences-ignore-info:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  background: rgba(var(--color-accent-rgb), 0.08);
+}
+
+.preferences-ignore-info:focus-visible {
   outline: 2px solid rgba(var(--color-accent-rgb), 0.35);
   outline-offset: 2px;
 }

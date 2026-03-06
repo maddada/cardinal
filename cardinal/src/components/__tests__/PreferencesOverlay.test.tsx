@@ -156,4 +156,19 @@ describe('PreferencesOverlay', () => {
     expect(onSortThresholdChange).not.toHaveBeenCalled();
     expect(onWatchConfigChange).not.toHaveBeenCalled();
   });
+
+  it('hides ignore path syntax help until the info button is clicked', () => {
+    render(<PreferencesOverlay {...baseProps} onWatchConfigChange={vi.fn()} />);
+
+    expect(screen.queryByText('ignorePaths.helpIntro')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'ignorePaths.showInfo' }));
+
+    expect(screen.getByText('ignorePaths.helpIntro')).toBeInTheDocument();
+    expect(screen.getByText('ignorePaths.helpComment')).toBeInTheDocument();
+    expect(screen.getByText('ignorePaths.helpSingleStar')).toBeInTheDocument();
+    expect(screen.getByText('ignorePaths.helpDoubleStar')).toBeInTheDocument();
+    expect(screen.getByText('ignorePaths.helpAnchoring')).toBeInTheDocument();
+    expect(screen.getByText('ignorePaths.helpNegation')).toBeInTheDocument();
+  });
 });

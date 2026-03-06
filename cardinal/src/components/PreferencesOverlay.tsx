@@ -41,6 +41,7 @@ export function PreferencesOverlay({
   const [thresholdInput, setThresholdInput] = useState<string>(() => sortThreshold.toString());
   const [watchRootInput, setWatchRootInput] = useState<string>(() => watchRoot);
   const [ignorePathsInput, setIgnorePathsInput] = useState<string>(() => ignorePaths.join('\n'));
+  const [isIgnorePathsHelpOpen, setIsIgnorePathsHelpOpen] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -146,6 +147,10 @@ export function PreferencesOverlay({
     }
   };
   const resetIgnorePathsLabel = `${t('preferences.reset')} ${t('ignorePaths.label')}`;
+  const ignorePathsHelpPanelId = 'preferences-ignore-paths-help';
+  const ignorePathsHelpToggleLabel = isIgnorePathsHelpOpen
+    ? t('ignorePaths.hideInfo')
+    : t('ignorePaths.showInfo');
 
   return (
     <div
@@ -228,9 +233,22 @@ export function PreferencesOverlay({
             </div>
           </div>
           <div className="preferences-row preferences-row--stacked">
-            <div className="preferences-row__details preferences-row__details--inline">
-              <p className="preferences-label">
-                <span title={t('ignorePaths.help')}>{t('ignorePaths.label')}</span>
+            <div className="preferences-row__details">
+              <div className="preferences-row__details--inline">
+                <p className="preferences-label">
+                  <span>{t('ignorePaths.label')}</span>
+                </p>
+                <button
+                  className="preferences-ignore-info"
+                  type="button"
+                  aria-label={ignorePathsHelpToggleLabel}
+                  aria-expanded={isIgnorePathsHelpOpen}
+                  aria-controls={ignorePathsHelpPanelId}
+                  title={ignorePathsHelpToggleLabel}
+                  onClick={() => setIsIgnorePathsHelpOpen((openState) => !openState)}
+                >
+                  i
+                </button>
                 <button
                   className="preferences-ignore-reset"
                   type="button"
@@ -240,7 +258,24 @@ export function PreferencesOverlay({
                 >
                   <span aria-hidden="true">↺</span>
                 </button>
-              </p>
+              </div>
+              {isIgnorePathsHelpOpen ? (
+                <div
+                  id={ignorePathsHelpPanelId}
+                  className="preferences-help-panel"
+                  role="note"
+                  aria-label={t('ignorePaths.infoTitle')}
+                >
+                  <p className="preferences-help-text">{t('ignorePaths.helpIntro')}</p>
+                  <ul className="preferences-help-list">
+                    <li className="preferences-help-text">{t('ignorePaths.helpComment')}</li>
+                    <li className="preferences-help-text">{t('ignorePaths.helpSingleStar')}</li>
+                    <li className="preferences-help-text">{t('ignorePaths.helpDoubleStar')}</li>
+                    <li className="preferences-help-text">{t('ignorePaths.helpAnchoring')}</li>
+                    <li className="preferences-help-text">{t('ignorePaths.helpNegation')}</li>
+                  </ul>
+                </div>
+              ) : null}
             </div>
             <div className="preferences-control preferences-control--stack preferences-control--full-width">
               <textarea

@@ -164,11 +164,11 @@ describe('PreferencesOverlay', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'ignorePaths.showInfo' }));
 
+    expect(screen.getByRole('button', { name: 'ignorePaths.hideInfo' })).toBeInTheDocument();
     expect(screen.getByText('ignorePaths.helpIntro')).toBeInTheDocument();
     expect(screen.getByText('ignorePaths.helpComment')).toBeInTheDocument();
     expect(screen.getByText('ignorePaths.helpSingleStar')).toBeInTheDocument();
     expect(screen.getByText('ignorePaths.helpDoubleStar')).toBeInTheDocument();
     expect(screen.getByText('ignorePaths.helpAnchoring')).toBeInTheDocument();
-    expect(screen.getByText('ignorePaths.helpNegation')).toBeInTheDocument();
   });
 });

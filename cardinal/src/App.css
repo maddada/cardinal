@@ -1673,7 +1673,7 @@ button:active:not(:disabled) {
   margin-top: 4px;
   width: 100%;
   color: var(--color-text-secondary);
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.35;
   white-space: normal;
 }
@@ -1757,7 +1757,7 @@ button:active:not(:disabled) {
   width: 100%;
   min-height: 230px;
   padding: 8px 10px;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.4;
   resize: vertical;
 }

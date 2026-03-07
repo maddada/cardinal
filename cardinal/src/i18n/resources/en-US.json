@@ -99,8 +99,7 @@
         "regexExample": "Append a sample regex filter: regex:^README\\.md$",
         "scope": {
           "in": "Pick a folder and search anywhere under that folder",
-          "parent": "Pick a folder and limit results to its direct children",
-          "noSubfolders": "Pick a folder and keep only that folder plus its direct file children"
+          "parent": "Pick a folder and limit results to its direct child files and folders"
         }
       },
       "kind": {

@@ -70,7 +70,6 @@ export const SearchFiltersBar = ({
   const { t } = useTranslation();
   const inFolderTooltip = t('search.filterBar.tooltips.scope.in');
   const parentFolderTooltip = t('search.filterBar.tooltips.scope.parent');
-  const noSubfoldersTooltip = t('search.filterBar.tooltips.scope.noSubfolders');
   const kindTooltip = t('search.filterBar.tooltips.kind');
   const typeTooltip = t('search.filterBar.tooltips.type');
   const extensionTooltip = t('search.filterBar.tooltips.extension');
@@ -125,7 +124,7 @@ export const SearchFiltersBar = ({
   ];
 
   const handleScopePick = useCallback(
-    async (scopePrefix: 'in' | 'parent' | 'nosubfolders') => {
+    async (scopePrefix: 'in' | 'parent') => {
       const selectedPath = await pickFolder();
       if (!selectedPath) {
         return;
@@ -185,14 +184,6 @@ export const SearchFiltersBar = ({
           onClick={() => void handleScopePick('parent')}
         >
           {t('search.filterBar.scope.parent')}
-        </button>
-        <button
-          className="search-filter-button"
-          type="button"
-          {...getTooltipAttributes(noSubfoldersTooltip)}
-          onClick={() => void handleScopePick('nosubfolders')}
-        >
-          {t('search.filterBar.scope.noSubfolders')}
         </button>
       </div>
 

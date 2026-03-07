@@ -12,7 +12,7 @@ const FAMILY_PREFIXES: Record<ToolbarReplaceFamily, string[]> = {
   type: ['type:', 'audio:', 'video:', 'doc:', 'exe:'],
   date: ['dm:', 'datemodified:', 'dc:', 'datecreated:'],
   size: ['size:'],
-  scope: ['parent:', 'infolder:', 'in:', 'nosubfolders:'],
+  scope: ['parent:', 'infolder:', 'in:'],
 };
 
 export const applySearchToolbarQueryAction = (

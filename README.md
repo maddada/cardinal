@@ -20,10 +20,10 @@
 Use homebrew:
 
 ```bash
-brew install --cask cardinal-search
+brew install --cask maddada/tap/cardinal-search
 ```
 
-You can also grab the latest packaged builds from [GitHub Releases](https://github.com/cardisoft/cardinal/releases/).
+You can also grab the latest packaged builds from [GitHub Releases](https://github.com/maddada/cardinal/releases/).
 
 ### i18n support
 

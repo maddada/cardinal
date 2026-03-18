@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getTooltipAttributes } from '../utils/tooltip';
 
 const SEARCH_SYNTAX_DOCS_URL =
-  'https://github.com/cardisoft/cardinal/blob/master/doc/pub/search-syntax.md';
+  'https://github.com/maddada/cardinal/blob/master/doc/pub/search-syntax.md';
 
 type SearchExample = {
   query: string;

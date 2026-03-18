@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.23 — 2026-03-19
+- Add a search filters bar, syntax help modal, and clearer tooltips for discoverability.
+- Support `.gitignore`-style ignore patterns with richer defaults, inline help, and reset controls.
+- Add a native folder picker for scope filters and keep related filter shortcuts easier to apply.
+- Include `~/Library/Caches` in the default ignore set and make the event watcher honor ignored paths.
+- Preserve remote sort state more reliably and keep sorting available even when results are empty.
+- Improve search correctness with NFC/NFD normalization and cleaner cancellation handling.
+
 ## 0.1.22 — 2026-03-08
 - Add `~/Library/CloudStorage` to default ignored paths to avoid initial indexing delays
 - Make index building cancellable

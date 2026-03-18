@@ -23,7 +23,7 @@ describe('SearchHelpOverlay', () => {
     fireEvent.click(screen.getByRole('link', { name: 'search.help.openDocs' }));
 
     expect(openUrlMock).toHaveBeenCalledWith(
-      'https://github.com/cardisoft/cardinal/blob/master/doc/pub/search-syntax.md',
+      'https://github.com/maddada/cardinal/blob/master/doc/pub/search-syntax.md',
     );
   });
 

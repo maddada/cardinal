@@ -5,7 +5,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import i18n from './i18n/config';
 import { openPreferences } from './utils/openPreferences';
 
-const HELP_UPDATES_URL = 'https://github.com/cardisoft/cardinal/releases';
+const HELP_UPDATES_URL = 'https://github.com/maddada/cardinal/releases';
 
 let menuInitPromise: Promise<void> | null = null;
 

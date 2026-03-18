@@ -25,6 +25,10 @@ use std::{
 use thin_vec::ThinVec;
 use tracing::{debug, info, warn};
 use typed_num::Num;
+use unicode_normalization::{IsNormalized, UnicodeNormalization, is_nfc_quick, is_nfd_quick};
+
+/// A flag that is never set
+static NEVER_STOPPED: AtomicBool = AtomicBool::new(false);
 
 pub struct SearchCache {
     pub(crate) file_nodes: FileNodes,
@@ -32,11 +36,13 @@ pub struct SearchCache {
     rescan_count: u64,
     pub(crate) name_index: NameIndex,
     ignore_matcher: Arc<IgnoreMatcher>,
-    stop: Option<&'static AtomicBool>,
+    stop: &'static AtomicBool,
 }
 
 #[derive(Debug, Clone)]
 pub struct SearchOutcome {
+    /// `None` means search was cancelled (not "no match");
+    /// `Some(vec![])` means completed search with zero matches.
     pub nodes: Option<Vec<SlabIndex>>,
     pub highlights: Vec<String>,
 }
@@ -44,6 +50,53 @@ pub struct SearchOutcome {
 impl SearchOutcome {
     fn new(nodes: Option<Vec<SlabIndex>>, highlights: Vec<String>) -> Self {
         Self { nodes, highlights }
+    }
+
+    fn cancelled() -> Self {
+        Self {
+            nodes: None,
+            highlights: vec![],
+        }
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.nodes.is_none()
+    }
+
+    fn merge(self, other: Self) -> Self {
+        let SearchOutcome {
+            nodes: primary_nodes,
+            highlights: primary_highlights,
+        } = self;
+        let SearchOutcome {
+            nodes: secondary_nodes,
+            highlights: secondary_highlights,
+        } = other;
+
+        let (Some(primary_nodes), Some(secondary_nodes)) = (primary_nodes, secondary_nodes) else {
+            return Self::cancelled();
+        };
+
+        let merged_nodes = Self::merge_preserve_order(primary_nodes, secondary_nodes);
+        let merged_highlights =
+            Self::merge_preserve_order(primary_highlights, secondary_highlights);
+        Self::new(Some(merged_nodes), merged_highlights)
+    }
+
+    fn merge_preserve_order<T>(lhs: Vec<T>, rhs: Vec<T>) -> Vec<T>
+    where
+        T: Eq + std::hash::Hash + Clone,
+    {
+        let mut merged = Vec::with_capacity(lhs.len() + rhs.len());
+        let mut seen = HashSet::with_capacity(lhs.len() + rhs.len());
+
+        for item in lhs.into_iter().chain(rhs.into_iter()) {
+            if seen.insert(item.clone()) {
+                merged.push(item);
+            }
+        }
+
+        merged
     }
 }
 
@@ -61,8 +114,8 @@ impl std::fmt::Debug for SearchCache {
 }
 
 impl SearchCache {
-    pub fn ignore_paths(&self) -> &Vec<PathBuf> {
-        self.file_nodes.ignore_paths()
+    pub fn ignore_paths(&self) -> Box<[PathBuf]> {
+        self.file_nodes.ignore_paths().clone().into_boxed_slice()
     }
 
     /// The `path` is the root path of the constructed cache and fsevent watch path.
@@ -70,7 +123,7 @@ impl SearchCache {
         path: &Path,
         cache_path: &Path,
         current_ignore_paths: &Vec<PathBuf>,
-        cancel: Option<&'static AtomicBool>,
+        cancel: &'static AtomicBool,
     ) -> Result<Self> {
         read_cache_from_file(cache_path)
             .and_then(|x| {
@@ -122,19 +175,23 @@ impl SearchCache {
     }
 
     pub fn walk_fs_with_ignore(path: &Path, ignore_paths: &[PathBuf]) -> Self {
-        Self::walk_fs_with_walk_data(&WalkData::new(path, ignore_paths, false, || false), None)
-            .unwrap()
+        Self::walk_fs_with_walk_data(
+            &WalkData::new(path, ignore_paths, false, || false),
+            &NEVER_STOPPED,
+        )
+        .unwrap()
     }
 
     pub fn walk_fs(path: &Path) -> Self {
-        Self::walk_fs_with_walk_data(&WalkData::new(path, &[], false, || false), None).unwrap()
+        Self::walk_fs_with_walk_data(&WalkData::new(path, &[], false, || false), &NEVER_STOPPED)
+            .unwrap()
     }
 
     /// This function is expected to be called with WalkData which metadata is not fetched.
     /// If cancelled during walking, None is returned.
     pub fn walk_fs_with_walk_data<F>(
         walk_data: &WalkData<'_, F>,
-        cancel: Option<&'static AtomicBool>,
+        cancel: &'static AtomicBool,
     ) -> Option<Self>
     where
         F: Fn() -> bool + Send + Sync,
@@ -198,7 +255,7 @@ impl SearchCache {
         last_event_id: u64,
         rescan_count: u64,
         name_index: NameIndex,
-        cancel: Option<&'static AtomicBool>,
+        cancel: &'static AtomicBool,
     ) -> Self {
         let ignore_matcher = Arc::new(IgnoreMatcher::new(slab.path(), slab.ignore_paths()));
         Self::new_with_ignore_matcher(
@@ -217,7 +274,7 @@ impl SearchCache {
         rescan_count: u64,
         name_index: NameIndex,
         ignore_matcher: Arc<IgnoreMatcher>,
-        cancel: Option<&'static AtomicBool>,
+        cancel: &'static AtomicBool,
     ) -> Self {
         Self {
             file_nodes: slab,
@@ -238,7 +295,7 @@ impl SearchCache {
             rescan_count: 0,
             name_index: NameIndex::default(),
             ignore_matcher: Arc::new(IgnoreMatcher::default()),
-            stop: Some(cancel),
+            stop: cancel,
         }
     }
 
@@ -262,6 +319,29 @@ impl SearchCache {
         options: SearchOptions,
         cancellation_token: CancellationToken,
     ) -> Result<SearchOutcome> {
+        let primary = self.search_with_query_line(line, options, cancellation_token)?;
+        // Cancellation must short-circuit and propagate as `nodes: None`.
+        // Running a secondary normalization pass after cancellation would be wasted work.
+        if primary.is_cancelled() {
+            return Ok(SearchOutcome::cancelled());
+        }
+
+        // Best-effort APFS workaround: run primary query first, then optionally
+        // run one alternate normalization form when the input is normalization-sensitive.
+        let Some(alt_line) = self.alternate_normalization_query(line) else {
+            return Ok(primary);
+        };
+
+        let secondary = self.search_with_query_line(&alt_line, options, cancellation_token)?;
+        Ok(primary.merge(secondary))
+    }
+
+    fn search_with_query_line(
+        &mut self,
+        line: &str,
+        options: SearchOptions,
+        cancellation_token: CancellationToken,
+    ) -> Result<SearchOutcome> {
         let parsed = parse_query(line).map_err(|err| anyhow!("Failed to parse query: {err}"))?;
         let expanded = expand_query_home_dirs(parsed);
         let unquoted = strip_query_quotes(expanded);
@@ -271,6 +351,37 @@ impl SearchCache {
         let result = self.evaluate_expr(&optimized.expr, options, cancellation_token);
         info!("Search time: {:?}", search_time.elapsed());
         result.map(|nodes| SearchOutcome::new(nodes, highlights))
+    }
+
+    // Why this exists:
+    // - APFS may surface path segments in either NFC or NFD (unlike HFS+ forcing NFD).
+    // - Our matcher is byte-oriented, so canonically equivalent Unicode forms
+    //   can miss each other without an alternate query form.
+    //
+    // Performance:
+    // - `is_nfd_quick` / `is_nfc_quick` are cheap probes.
+    // - If both are `Yes`, query is normalization-inert, so we skip the second pass.
+    //
+    // Limitations (by design):
+    // - This is a low-overhead workaround, not a fully normalization-aware index.
+    // - We only generate one alternate query line.
+    // - A filename that mixes NFC/NFD within the same segment can still be a miss,
+    //   depending on which form the matcher ultimately compares against.
+    fn alternate_normalization_query(&self, line: &str) -> Option<String> {
+        let nfd_quick = is_nfd_quick(line.chars());
+        let nfc_quick = is_nfc_quick(line.chars());
+        let nfd_yes = matches!(nfd_quick, IsNormalized::Yes);
+        let nfc_yes = matches!(nfc_quick, IsNormalized::Yes);
+        if nfd_yes && nfc_yes {
+            return None;
+        }
+
+        let alt = if nfd_yes {
+            line.nfc().collect::<String>()
+        } else {
+            line.nfd().collect::<String>()
+        };
+        (alt != line).then_some(alt)
     }
 
     /// Get the path of the node in the slab.
@@ -448,7 +559,7 @@ impl SearchCache {
             self.file_nodes.ignore_paths(),
             Arc::clone(&self.ignore_matcher),
             true,
-            move || stop.map(|x| x.load(Ordering::Relaxed)).unwrap_or_default(),
+            move || stop.load(Ordering::Relaxed),
         );
         let node = match walk_it_without_root_chain(&walk_data) {
             Some(node) => node,
@@ -491,8 +602,7 @@ impl SearchCache {
             Arc::clone(&self.ignore_matcher),
             false,
             move || {
-                stop.map(|x| x.load(Ordering::Relaxed)).unwrap_or_default()
-                    || scan_cancellation_token.is_cancelled().is_none()
+                stop.load(Ordering::Relaxed) || scan_cancellation_token.is_cancelled().is_none()
             },
         )
     }
@@ -518,7 +628,7 @@ impl SearchCache {
                 self.file_nodes.ignore_paths(),
                 Arc::clone(&self.ignore_matcher),
                 false,
-                move || stop.map(|x| x.load(Ordering::Relaxed)).unwrap_or_default(),
+                move || stop.load(Ordering::Relaxed),
             ),
             self.stop,
         ) else {
@@ -1024,7 +1134,8 @@ mod tests {
         fs::File::create(root.join("beta/target.txt")).unwrap();
 
         let walk_data = WalkData::simple(root, false);
-        let cache = SearchCache::walk_fs_with_walk_data(&walk_data, None).expect("walk cache");
+        let cache =
+            SearchCache::walk_fs_with_walk_data(&walk_data, &NEVER_STOPPED).expect("walk cache");
 
         let entries = cache
             .name_index
@@ -1962,6 +2073,109 @@ mod tests {
             token,
         );
         assert!(matches!(result, Ok(SearchOutcome { nodes: None, .. })));
+    }
+
+    #[test]
+    fn alternate_normalization_query_ascii_returns_none() {
+        let temp_dir = TempDir::new("alternate_normalization_query_ascii_returns_none").unwrap();
+        let cache = SearchCache::walk_fs(temp_dir.path());
+
+        assert_eq!(
+            cache.alternate_normalization_query("office/report.txt"),
+            None
+        );
+    }
+
+    #[test]
+    fn alternate_normalization_query_normalization_inert_unicode_returns_none() {
+        let temp_dir =
+            TempDir::new("alternate_normalization_query_normalization_inert_unicode_returns_none")
+                .unwrap();
+        let cache = SearchCache::walk_fs(temp_dir.path());
+
+        // CJK characters are normalization-inert in this context.
+        assert_eq!(cache.alternate_normalization_query("文件/项目"), None);
+    }
+
+    #[test]
+    fn alternate_normalization_query_nfc_input_returns_nfd_variant() {
+        let temp_dir =
+            TempDir::new("alternate_normalization_query_nfc_input_returns_nfd_variant").unwrap();
+        let cache = SearchCache::walk_fs(temp_dir.path());
+
+        let nfc = "B\u{00FC}ro/rechnung.txt";
+        let nfd = "Bu\u{0308}ro/rechnung.txt";
+        assert_eq!(
+            cache.alternate_normalization_query(nfc),
+            Some(nfd.to_string())
+        );
+    }
+
+    #[test]
+    fn alternate_normalization_query_nfd_input_returns_nfc_variant() {
+        let temp_dir =
+            TempDir::new("alternate_normalization_query_nfd_input_returns_nfc_variant").unwrap();
+        let cache = SearchCache::walk_fs(temp_dir.path());
+
+        let nfd = "Bu\u{0308}ro/rechnung.txt";
+        let nfc = "B\u{00FC}ro/rechnung.txt";
+        assert_eq!(
+            cache.alternate_normalization_query(nfd),
+            Some(nfc.to_string())
+        );
+    }
+
+    #[test]
+    fn alternate_normalization_query_noncanonical_combining_order_is_reordered() {
+        let temp_dir =
+            TempDir::new("alternate_normalization_query_noncanonical_combining_order_is_reordered")
+                .unwrap();
+        let cache = SearchCache::walk_fs(temp_dir.path());
+
+        let noncanonical = "a\u{0302}\u{0323}";
+        let canonical_nfd = "a\u{0323}\u{0302}";
+        assert_eq!(
+            cache.alternate_normalization_query(noncanonical),
+            Some(canonical_nfd.to_string())
+        );
+    }
+
+    #[test]
+    fn search_with_options_merges_highlights_from_secondary_normalization_pass() {
+        let temp_dir =
+            TempDir::new("search_with_options_merges_highlights_from_secondary_normalization_pass")
+                .unwrap();
+        let root = temp_dir.path();
+        let nfd_dir = "Bu\u{0308}ro";
+        fs::create_dir_all(root.join(nfd_dir)).unwrap();
+        fs::File::create(root.join(nfd_dir).join("angebot.pdf")).unwrap();
+
+        let mut cache = SearchCache::walk_fs(root);
+        let result = cache
+            .search_with_options(
+                "B\u{00FC}ro",
+                SearchOptions {
+                    case_insensitive: false,
+                },
+                CancellationToken::noop(),
+            )
+            .expect("search should succeed");
+
+        let nodes = result
+            .nodes
+            .expect("noop cancellation token should not cancel");
+        assert!(
+            !nodes.is_empty(),
+            "secondary normalization pass should match NFD path"
+        );
+        assert!(
+            result.highlights.contains(&"büro".to_string()),
+            "highlights should keep primary NFC form"
+        );
+        assert!(
+            result.highlights.contains(&"bu\u{0308}ro".to_string()),
+            "highlights should include secondary NFD form"
+        );
     }
 
     #[test]

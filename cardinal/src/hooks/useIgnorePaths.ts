@@ -43,6 +43,7 @@ const DEFAULT_IGNORE_PATHS = [
   '**/.cargo/registry/',
   '',
   '# Caches and runtime storage.',
+  '~/Library/Caches',
   '**/Library/Caches/',
   '**/Library/Application Support/*/Partitions/*/Cache/',
   '**/Library/Application Support/*/Cache/',

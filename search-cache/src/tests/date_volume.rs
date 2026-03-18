@@ -278,6 +278,7 @@ fn segment_2_month_year_keywords() {
     assert!(list_names(&cache, &thismonth_hits).contains(&"jan_file.txt".to_string()));
     let lastmonth_hits = cache.search("dm:lastmonth").unwrap(); // ensure query is stable and excludes clearly out-of-range fixtures
     let lastmonth_names = list_names(&cache, &lastmonth_hits);
+    assert!(!lastmonth_names.contains(&"jan_file.txt".to_string()));
     assert!(!lastmonth_names.contains(&"last_year_file.txt".to_string()));
     let thisyear_hits = cache.search("dm:thisyear").unwrap();
     assert!(list_names(&cache, &thisyear_hits).contains(&"jan_file.txt".to_string()));

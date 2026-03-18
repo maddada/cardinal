@@ -10,11 +10,13 @@ use search_cancel::CancellationToken;
 use std::{
     io::Write,
     path::{Path, PathBuf},
+    sync::atomic::AtomicBool,
 };
 use tracing_subscriber::{EnvFilter, filter::LevelFilter};
 
 const CACHE_PATH: &str = "target/cache.zstd";
 const IGNORE_PATH: &str = "/System/Volumes/Data"; // macOS specific ignore path
+static NEVER_STOPPED: AtomicBool = AtomicBool::new(false);
 
 fn main() -> Result<()> {
     let builder = tracing_subscriber::fmt();
@@ -32,11 +34,16 @@ fn main() -> Result<()> {
         SearchCache::walk_fs_with_ignore(&path, &ignore_paths)
     } else {
         println!("Try reading cache...");
-        SearchCache::try_read_persistent_cache(&path, Path::new(CACHE_PATH), &ignore_paths, None)
-            .unwrap_or_else(|e| {
-                println!("Failed to read cache: {e:?}. Re-walking filesystem...");
-                SearchCache::walk_fs_with_ignore(&path, &ignore_paths)
-            })
+        SearchCache::try_read_persistent_cache(
+            &path,
+            Path::new(CACHE_PATH),
+            &ignore_paths,
+            &NEVER_STOPPED,
+        )
+        .unwrap_or_else(|e| {
+            println!("Failed to read cache: {e:?}. Re-walking filesystem...");
+            SearchCache::walk_fs_with_ignore(&path, &ignore_paths)
+        })
     };
 
     println!("Cache is: {cache:?}");
@@ -46,8 +53,12 @@ fn main() -> Result<()> {
     let (search_result_tx, search_result_rx) = unbounded::<Result<Vec<SearchResultNode>>>();
 
     std::thread::spawn(move || {
-        let (dev, mut event_watcher) =
-            EventWatcher::spawn("/".to_string(), cache.last_event_id(), 0.1);
+        let (dev, mut event_watcher) = EventWatcher::spawn(
+            "/".to_string(),
+            cache.last_event_id(),
+            0.1,
+            cache.ignore_paths(),
+        );
         println!("Processing changes of dev:{dev} during preparation.");
         loop {
             crossbeam_channel::select! {
@@ -80,7 +91,13 @@ fn main() -> Result<()> {
                             CancellationToken::new_scan(),
                         );
                         let _ = cache.rescan_with_walk_data(&walk_data);
-                        event_watcher = EventWatcher::spawn("/".to_string(), cache.last_event_id(), 0.1).1;
+                        event_watcher = EventWatcher::spawn(
+                            "/".to_string(),
+                            cache.last_event_id(),
+                            0.1,
+                            cache.ignore_paths(),
+                        )
+                        .1;
                     }
                 }
             }

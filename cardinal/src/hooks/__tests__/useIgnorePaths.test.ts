@@ -46,7 +46,7 @@ describe('useIgnorePaths', () => {
     );
   });
 
-  it('ships grouped defaults with section comments and blank separators', () => {
+  it('ships grouped defaults with section comments and cache-heavy paths', () => {
     const { result } = renderHook(() => useIgnorePaths());
     const defaults = result.current.defaultIgnorePaths;
 
@@ -99,6 +99,7 @@ describe('useIgnorePaths', () => {
     expect(defaults).toContain('/Library/Apple/System/Library/PrivateFrameworks/');
     expect(defaults).toContain('/Library/Application Support/Apple/BezelServices/');
     expect(defaults).toContain('~/Library/CloudStorage');
+    expect(defaults).toContain('~/Library/Caches');
     expect(defaults).toContain('~/Library/Containers/');
     expect(defaults).toContain('~/Library/Group Containers/');
     expect(defaults).toContain('~/.codex-profiles/*/tmp/');

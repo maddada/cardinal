@@ -71,7 +71,7 @@ export const useRemoteSort = (
     0,
   );
 
-  const canSort = results.length > 0 && results.length <= sortThreshold;
+  const canSort = results.length <= sortThreshold;
   const shouldUseSortedResults = Boolean(sortState && canSort);
   const displayedResults = shouldUseSortedResults ? sortedResults : results;
 

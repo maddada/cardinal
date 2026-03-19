@@ -118,6 +118,22 @@ impl SearchCache {
         self.file_nodes.ignore_paths().clone().into_boxed_slice()
     }
 
+    pub fn filter_runtime_events(&self, events: &[FsEvent]) -> Vec<FsEvent> {
+        events
+            .iter()
+            .filter(|event| self.should_forward_runtime_event(event))
+            .cloned()
+            .collect()
+    }
+
+    fn should_forward_runtime_event(&self, event: &FsEvent) -> bool {
+        match event.flag.scan_type() {
+            ScanType::Nop | ScanType::ReScan => true,
+            ScanType::Folder => !self.ignore_matcher.is_ignored(&event.path, true),
+            ScanType::SingleNode => !self.ignore_matcher.is_ignored(&event.path, false),
+        }
+    }
+
     /// The `path` is the root path of the constructed cache and fsevent watch path.
     pub fn try_read_persistent_cache(
         path: &Path,
@@ -3220,6 +3236,55 @@ mod tests {
         ];
         let out = scan_paths(events);
         assert_eq!(out, vec![PathBuf::from("/t/a")]);
+    }
+
+    #[test]
+    fn test_filter_runtime_events_uses_ignore_matcher_semantics() {
+        let temp_dir = TempDir::new("runtime_event_filter").unwrap();
+        let root = temp_dir.path().canonicalize().unwrap();
+        fs::create_dir_all(root.join("node_modules/pkg")).unwrap();
+
+        let ignore_paths = vec![
+            PathBuf::from(""),
+            PathBuf::from("# section"),
+            PathBuf::from("**/node_modules/**"),
+        ];
+        let cache = SearchCache::walk_fs_with_ignore(&root, &ignore_paths);
+
+        let visible_path = root.join("src/main.rs");
+        let ignored_path = root.join("node_modules/pkg/index.js");
+        let filtered = cache.filter_runtime_events(&[
+            FsEvent {
+                path: visible_path.clone(),
+                id: 1,
+                flag: EventFlag::ItemCreated | EventFlag::ItemIsFile,
+            },
+            FsEvent {
+                path: ignored_path.clone(),
+                id: 2,
+                flag: EventFlag::ItemCreated | EventFlag::ItemIsFile,
+            },
+            FsEvent {
+                path: root.clone(),
+                id: 3,
+                flag: EventFlag::HistoryDone,
+            },
+        ]);
+
+        assert!(
+            filtered.iter().any(|event| event.path == visible_path),
+            "blank/comment ignore entries must not drop visible events"
+        );
+        assert!(
+            filtered.iter().all(|event| event.path != ignored_path),
+            "glob ignore entries should still suppress ignored subtrees"
+        );
+        assert!(
+            filtered
+                .iter()
+                .any(|event| event.flag.contains(EventFlag::HistoryDone)),
+            "control events should still be forwarded"
+        );
     }
 
     #[test]

@@ -209,7 +209,9 @@ fn handle_event_watcher_events(
     history_ready: &mut bool,
     processed_events: &mut usize,
 ) {
-    *processed_events += events.len();
+    let visible_events = cache.filter_runtime_events(&events);
+
+    *processed_events += visible_events.len();
 
     emit_status_bar_update(
         app_handle,
@@ -218,8 +220,8 @@ fn handle_event_watcher_events(
         cache.rescan_count() as usize,
     );
 
-    let mut snapshots = Vec::with_capacity(events.len());
-    for event in events.iter() {
+    let mut snapshots = Vec::with_capacity(visible_events.len());
+    for event in visible_events.iter() {
         if event.flag == EventFlag::HistoryDone {
             *history_ready = true;
             update_app_state(app_handle, AppLifecycleState::Ready);

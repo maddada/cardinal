@@ -1,4 +1,4 @@
-use crate::{EventFlag, FsEvent};
+use crate::FsEvent;
 use crossbeam_channel::{Receiver, Sender, bounded, unbounded};
 use dispatch2::{DispatchQueue, DispatchQueueAttr, DispatchRetained};
 use libc::dev_t;
@@ -169,7 +169,7 @@ impl EventWatcher {
         path: String,
         since_event_id: FSEventStreamEventId,
         latency: f64,
-        ignore_paths: Box<[PathBuf]>,
+        _ignore_paths: Box<[PathBuf]>,
     ) -> (dev_t, EventWatcher) {
         let (_cancellation_token, cancellation_token_rx) = bounded::<()>(1);
         let (sender, receiver) = unbounded();
@@ -178,7 +178,6 @@ impl EventWatcher {
             since_event_id,
             latency,
             Box::new(move |events| {
-                let events = filter_ignored_events(events, &ignore_paths);
                 if !events.is_empty() {
                     let _ = sender.send(events);
                 }
@@ -202,27 +201,12 @@ impl EventWatcher {
     }
 }
 
-fn filter_ignored_events(events: Vec<FsEvent>, ignore_paths: &[PathBuf]) -> Vec<FsEvent> {
-    events
-        .into_iter()
-        .filter(|event| {
-            event.flag.contains(EventFlag::HistoryDone)
-                || !ignore_paths
-                    .iter()
-                    .any(|ignore| event.path.starts_with(ignore))
-        })
-        .collect()
-}
-
 #[cfg(all(test, target_os = "macos"))]
 mod tests {
     use super::*;
     use crate::{EventFlag, utils::current_event_id};
     use crossbeam_channel::RecvTimeoutError;
-    use std::{
-        path::PathBuf,
-        time::{Duration, Instant},
-    };
+    use std::time::{Duration, Instant};
     use tempfile::tempdir;
 
     #[test]
@@ -348,48 +332,6 @@ mod tests {
         assert!(
             observed_change,
             "respawned watcher failed to deliver file change event"
-        );
-    }
-
-    #[test]
-    fn filter_ignored_events_drops_ignored_paths_but_keeps_history_done() {
-        let ignored = PathBuf::from("/root/ignored");
-        let events = vec![
-            FsEvent {
-                path: PathBuf::from("/root/ignored/file.txt"),
-                flag: EventFlag::ItemCreated,
-                id: 1,
-            },
-            FsEvent {
-                path: PathBuf::from("/root/visible/file.txt"),
-                flag: EventFlag::ItemCreated,
-                id: 2,
-            },
-            FsEvent {
-                path: PathBuf::from("/root"),
-                flag: EventFlag::HistoryDone,
-                id: 3,
-            },
-        ];
-
-        let filtered = filter_ignored_events(events, &[ignored]);
-
-        assert_eq!(
-            filtered.len(),
-            2,
-            "ignored subtree events should be dropped"
-        );
-        assert!(
-            filtered
-                .iter()
-                .all(|event| &event.path != "/root/ignored/file.txt"),
-            "ignored event must not be forwarded to the main loop"
-        );
-        assert!(
-            filtered
-                .iter()
-                .any(|event| event.flag.contains(EventFlag::HistoryDone)),
-            "HistoryDone must still be delivered"
         );
     }
 }

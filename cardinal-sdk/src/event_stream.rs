@@ -176,7 +176,9 @@ impl EventWatcher {
             since_event_id,
             latency,
             Box::new(move |events| {
-                let _ = sender.send(events);
+                if !events.is_empty() {
+                    let _ = sender.send(events);
+                }
             }),
         );
         let dev = stream.dev();

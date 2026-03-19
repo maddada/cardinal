@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.24 — 2026-03-19
+- Make the Events feed use the same ignore matcher semantics as scanning and cached search results.
+- Fix the regression where blank/comment separator entries in ignore paths could suppress visible runtime events.
+
 ## 0.1.23 — 2026-03-19
 - Add a search filters bar, syntax help modal, and clearer tooltips for discoverability.
 - Support `.gitignore`-style ignore patterns with richer defaults, inline help, and reset controls.

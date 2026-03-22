@@ -67,6 +67,13 @@ describe('useIgnorePaths', () => {
     expect(defaults).toContain('**/Library/Application Support/*/Cache/');
     expect(defaults).toContain('~/Library/Application Support/Cursor/User/History/');
     expect(defaults).toContain('~/Library/Application Support/Code*/User/History/');
+    expect(defaults).toContain('~/.claude/plugins/cache/');
+    expect(defaults).toContain('**/Library/Logs/DiagnosticReports/');
+    expect(defaults).toContain('**/Library/Application Support/CrashReporter/');
+    expect(defaults).toContain('**/Library/Application Support/Code/User/globalStorage/');
+    expect(defaults).toContain('**/Library/Application Support/Google/Chrome*/');
+    expect(defaults).toContain('**/Library/Application Support/Google/GoogleUpdater/');
+    expect(defaults).toContain('**/Library/Preferences/');
     expect(defaults).toContain('~/Library/pnpm/store');
     expect(defaults).toContain('**/Library/pnpm/store/');
     expect(defaults).toContain('**/target/');
@@ -74,6 +81,7 @@ describe('useIgnorePaths', () => {
     expect(defaults).toContain('**/Service Worker/CacheStorage/');
     expect(defaults).toContain('**/IndexedDB/');
     expect(defaults).toContain('**/WebStorage/');
+    expect(defaults).toContain('**/Library/WebKit/**/WebsiteDataStore/');
     expect(defaults).toContain('**/.next/');
     expect(defaults).toContain('**/.git/');
     expect(defaults).toContain('**/.gitignore');
@@ -90,9 +98,7 @@ describe('useIgnorePaths', () => {
     expect(defaults).toContain('~/.rustup/toolchains/');
     expect(defaults).toContain('~/.cursor/extensions/');
     expect(defaults).toContain('~/.nuget/packages/');
-    expect(defaults).toContain('**/Google/Chrome*/**/GPUCache/');
     expect(defaults).toContain('**/Vivaldi*/**/GPUCache/');
-    expect(defaults).toContain('**/Google/Chrome*/**/Local Storage/leveldb/');
     expect(defaults).toContain('**/Vivaldi*/**/Local Storage/leveldb/');
     expect(defaults).toContain('/System/Volumes/');
     expect(defaults).toContain('/System/iOSSupport/System/Library/');

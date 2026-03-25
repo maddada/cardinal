@@ -1,4 +1,4 @@
-# This is just a fork that adds the following:
+## This is just a fork that adds the following to Cardinal (The best Everythign alternative for macOS):
 
 - Raycast/Spotlight don't find files in certain locations.
 - Houdahspot is close but the search isn't instant.
@@ -6,7 +6,7 @@
 
 Use the original if you don't care for these features. I'll delete my fork when these are merged but main dev has been busy.
 
-## Using Cardinal X
+## Installing Cardinal X
 
 ### Download
 

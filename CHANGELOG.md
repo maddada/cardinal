@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.25 — 2026-03-25
+- Rebrand the packaged app to Cardinal X with a separate macOS bundle identifier so it can coexist with the original Cardinal app.
+- Add a dedicated `cardinal-x` Homebrew cask/release track.
+- Include the latest ignore-path and local production Makefile updates from the unreleased commit on top of 0.1.24.
+
 ## 0.1.24 — 2026-03-19
 - Make the Events feed use the same ignore matcher semantics as scanning and cached search results.
 - Fix the regression where blank/comment separator entries in ignore paths could suppress visible runtime events.

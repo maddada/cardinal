@@ -13,7 +13,7 @@
       "openDocs": "Open Full Docs on GitHub",
       "title": "Search & Filter Guide",
       "headerLine": "Quick syntax reference for the files search box.",
-      "subtitle": "Cardinal can match file paths, folder paths, filenames, folder names, and file contents using plain terms, quoted phrases, wildcards, operators, and filters.",
+      "subtitle": "Cardinal X can match file paths, folder paths, filenames, folder names, and file contents using plain terms, quoted phrases, wildcards, operators, and filters.",
       "examplesTitle": "Examples",
       "examplesDescription": "Each example shows one syntax feature. Click any example to add it to the files search box",
       "exampleDescriptions": {
@@ -204,7 +204,7 @@
       "settings": "Open preferences"
     },
     "rescan": {
-      "disabledHint": "Rescan becomes available once Cardinal is ready.",
+      "disabledHint": "Rescan becomes available once Cardinal X is ready.",
       "enabledHint": "Trigger a full filesystem rescan.",
       "errorCountSuffix": " {{formatted}} filesystem errors have occurred, rescan is suggested."
     },
@@ -219,11 +219,11 @@
   "app": {
     "fullDiskAccess": {
       "title": "Full Disk Access Required",
-      "description": "Cardinal needs macOS Full Disk Access to index and monitor files across your system. Please enable Full Disk Access for Cardinal in System Settings.",
+      "description": "Cardinal X needs macOS Full Disk Access to index and monitor files across your system. Please enable Full Disk Access for Cardinal X in System Settings.",
       "steps": {
         "one": "Open System Settings > Privacy & Security > Full Disk Access.",
-        "two": "Click the lock to make changes and enable Cardinal.",
-        "three": "When prompted, allow macOS to restart Cardinal."
+        "two": "Click the lock to make changes and enable Cardinal X.",
+        "three": "When prompted, allow macOS to restart Cardinal X."
       },
       "status": {
         "checking": "Checking permission status...",
@@ -255,7 +255,7 @@
   },
   "preferences": {
     "title": "Preferences",
-    "heading": "Make Cardinal yours",
+    "heading": "Make Cardinal X yours",
     "subtitle": "Adjust appearance and language to your liking.",
     "appearance": "Appearance",
     "themeHint": "Choose light, dark, or follow the system.",
@@ -285,8 +285,8 @@
     }
   },
   "tray": {
-    "open": "Open Cardinal",
-    "quit": "Quit Cardinal"
+    "open": "Open Cardinal X",
+    "quit": "Quit Cardinal X"
   },
   "watchRoot": {
     "label": "Monitor root path",
@@ -296,7 +296,7 @@
       "absolute": "Please enter an absolute path starting with '/' or '~'."
     },
     "title": "Choose monitor root path",
-    "description": "Cardinal will index and monitor files under this directory. You can change it later in Preferences.",
+    "description": "Cardinal X will index and monitor files under this directory. You can change it later in Preferences.",
     "action": "Start indexing"
   },
   "ignorePaths": {

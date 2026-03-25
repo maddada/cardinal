@@ -1,5 +1,5 @@
-APP_NAME := Cardinal
-BUNDLE_ID := com.madda.cardinal
+APP_NAME := Cardinal X
+BUNDLE_ID := com.madda.cardinalx
 APP_DIR := cardinal
 BUILD_TARGET := universal-apple-darwin
 RELEASE_APP := $(APP_DIR)/src-tauri/target/$(BUILD_TARGET)/release/bundle/macos/$(APP_NAME).app

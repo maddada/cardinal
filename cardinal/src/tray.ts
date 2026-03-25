@@ -13,7 +13,7 @@ let trayIcon: TrayIcon | null = null;
 export function initializeTray(): Promise<void> {
   if (!trayInitPromise) {
     trayInitPromise = createTray().catch((error) => {
-      console.error('Failed to initialize Cardinal tray', error);
+      console.error('Failed to initialize Cardinal X tray', error);
       trayInitPromise = null;
     });
   }
@@ -60,7 +60,7 @@ async function createTray(): Promise<void> {
   });
   const options: TrayIconOptions = {
     id: TRAY_ID,
-    tooltip: 'Cardinal',
+    tooltip: 'Cardinal X',
     icon: (await defaultWindowIcon()) ?? undefined,
     menu,
   };

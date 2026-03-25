@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Cardinal",
-  "version": "0.1.24",
-  "identifier": "com.madda.cardinal",
+  "productName": "Cardinal X",
+  "version": "0.1.25",
+  "identifier": "com.madda.cardinalx",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Cardinal",
+        "title": "Cardinal X",
         "width": 1200,
         "height": 800,
         "zoomHotkeysEnabled": true

@@ -107,7 +107,7 @@ pub fn run() -> Result<()> {
 
                     if hide_window(&window) {
                         let _ = update_window_state_tx_for_window.try_send(());
-                        info!("Main window hidden; Cardinal keeps running in the background");
+                        info!("Main window hidden; Cardinal X keeps running in the background");
                     }
                 }
                 _ => {}

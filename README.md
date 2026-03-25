@@ -1,17 +1,10 @@
-<div align="center">
-  <img src="cardinal/mac-icon_1024x1024.png" alt="Cardinal X icon" width="120" height="120">
-  <h1>Cardinal X</h1>
-  <p>Fastest and most accurate file search app for macOS.</p>
-  <p>
-    <a href="#using-cardinal-x">Using Cardinal X</a> ·
-    <a href="#building-cardinal-x">Building Cardinal X</a>
-  </p>
-  <img src="doc/pub/UI.gif" alt="Cardinal X UI preview" width="720">
-</div>
+# This is just a fork that adds the following:
 
----
+- Raycast/Spotlight don't find files in certain locations.
+- Houdahspot is close but the search isn't instant.
+- There's a few others but they're either laggy or have bad UX. 
 
-[English](README.md) · [Español](doc/pub/README.es-ES.md) · [한국어](doc/pub/README.ko-KR.md) · [Русский](doc/pub/README.ru-RU.md) · [简体中文](doc/pub/README.zh-CN.md) · [繁體中文](doc/pub/README.zh-TW.md) · [Português](doc/pub/README.pt-BR.md) · [Italiano](doc/pub/README.it-IT.md) · [日本語](doc/pub/README.ja-JP.md) · [Français](doc/pub/README.fr-FR.md) · [Deutsch](doc/pub/README.de-DE.md) · [Українська](doc/pub/README.uk-UA.md) · [العربية](doc/pub/README.ar-SA.md) · [हिन्दी](doc/pub/README.hi-IN.md) · [Türkçe](doc/pub/README.tr-TR.md)
+Use the original if you don't care for these features. I'll delete my fork when these are merged but main dev has been busy.
 
 ## Using Cardinal X
 
@@ -24,6 +17,25 @@ brew install --cask maddada/tap/cardinal-x
 ```
 
 You can also grab the latest packaged builds from [GitHub Releases](https://github.com/maddada/cardinal/releases/).
+
+---
+
+# Original Repo's readme
+
+<div align="center">
+  <img src="cardinal/mac-icon_1024x1024.png" alt="Cardinal X icon" width="120" height="120">
+  <h1>Cardinal</h1>
+  <p>Fastest and most accurate file search app for macOS.</p>
+  <p>
+    <a href="#using-cardinal-x">Using Cardinal</a>
+    <a href="#building-cardinal-x">Building Cardinal</a>
+  </p>
+  <img src="doc/pub/UI.gif" alt="Cardinal X UI preview" width="720">
+</div>
+
+---
+
+[English](README.md) · [Español](doc/pub/README.es-ES.md) · [한국어](doc/pub/README.ko-KR.md) · [Русский](doc/pub/README.ru-RU.md) · [简体中文](doc/pub/README.zh-CN.md) · [繁體中文](doc/pub/README.zh-TW.md) · [Português](doc/pub/README.pt-BR.md) · [Italiano](doc/pub/README.it-IT.md) · [日本語](doc/pub/README.ja-JP.md) · [Français](doc/pub/README.fr-FR.md) · [Deutsch](doc/pub/README.de-DE.md) · [Українська](doc/pub/README.uk-UA.md) · [العربية](doc/pub/README.ar-SA.md) · [हिन्दी](doc/pub/README.hi-IN.md) · [Türkçe](doc/pub/README.tr-TR.md)
 
 ### i18n support
 

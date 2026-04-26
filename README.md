@@ -1,5 +1,12 @@
 ## This is just a fork that adds the following to Cardinal (The best Everything alternative for macOS):
 
+- Filters bar at the top
+- Filter commands help modal with clickable examples
+- Better default ignore list
+- Ability to use glob ignore patterns to skip all temp and cache folders (not possible with original)
+
+## Why cardinal is the best everything alternative:
+
 - Raycast/Spotlight don't find files in certain locations.
 - Houdahspot is close but the search isn't instant.
 - There's a few others but they're either laggy or have bad UX. 

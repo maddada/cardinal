@@ -1,4 +1,4 @@
-## This is just a fork that adds the following to Cardinal (The best Everythign alternative for macOS):
+## This is just a fork that adds the following to Cardinal (The best Everything alternative for macOS):
 
 - Raycast/Spotlight don't find files in certain locations.
 - Houdahspot is close but the search isn't instant.
